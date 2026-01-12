@@ -26,6 +26,8 @@ const Todo = () => {
 
 
     const [newTaskTitle, setNewTaskTitle] = useState('')
+    const [searchQuery, setSearchQuery] = useState('')
+
 
 
     const deleteAllTasks = () => {
@@ -48,9 +50,9 @@ const Todo = () => {
         }))
     }
 
-    const filterTask = (query) => {
-        console.log(`Поиск: ${query}`)
-    }
+    // const filterTask = (query) => {
+    //     console.log(`Поиск: ${query}`)
+    // }
 
     const addTask = () => {
         if (newTaskTitle.trim().length > 0) {
@@ -62,6 +64,7 @@ const Todo = () => {
 
             setTasks([...tasks, newTask])
             setNewTaskTitle('')
+            setSearchQuery('') //отключит поиск при вводе задачи
         }
     }
 
@@ -78,6 +81,11 @@ const Todo = () => {
         localStorage.setItem('tasks', JSON.stringify(tasks))
     }, [tasks])
 
+    const clearSearchQuery = searchQuery.trim().toLowerCase()
+    const filteredTasks = clearSearchQuery.length > 0
+    ? tasks.filter(({title}) => title.toLowerCase().includes(clearSearchQuery))
+    : null
+
     return (
         <div className="todo">
             <h1 className="todo__title">To Do List</h1>
@@ -87,7 +95,9 @@ const Todo = () => {
                 setNewTaskTitle={setNewTaskTitle}
             />
             <SearchTaskForm
-                onSearchInput={filterTask}
+                // onSearchInput={filterTask}
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
             />
             <TodoInfo
                 total={tasks.length}
@@ -96,6 +106,7 @@ const Todo = () => {
             />
             <TodoList
                 onTaskCompliteChange={toggleTaskComplete}
+                filteredTasks={filteredTasks}
                 tasks={tasks}
                 onDeleteTaskButtonClick={deleteTask} />
         </div>
