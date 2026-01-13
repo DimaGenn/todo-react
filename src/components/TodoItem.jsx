@@ -1,16 +1,19 @@
+import {memo} from 'react'
+
 const TodoItem = (props) => {
     const {
         className = '',
         id,
         title,
         isDone,
+        ref,
         onDeleteTaskButtonClick,
         onTaskCompliteChange
     } = props
 
 
     return (
-        <li className={`todo-item ${className}`}>
+        <li className={`todo-item ${className}`} ref={ref}>
             <input
                 className="todo-item__checkbox"
                 id={id}
@@ -50,4 +53,4 @@ const TodoItem = (props) => {
     )
 }
 
-export default TodoItem
+export default memo(TodoItem)

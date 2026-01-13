@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef, useCallback, useMemo} from "react"
 import AddTaskForm from "./AddTaskForm"
 import SearchTaskForm from "./SearchTaskForm"
 import TodoInfo from "./TodoInfo"
 import TodoList from "./TodoList"
+import Button from "./Button"
 
 const Todo = () => {
     // const [tasks, setTasks] = useState(
@@ -29,44 +30,52 @@ const Todo = () => {
     const [searchQuery, setSearchQuery] = useState('')
 
 
+    const newTaskInputRef = useRef(null)
+    const firstIncompleteTaskRef = useRef(null)
+    const firstIncompleteTaskId = tasks.find(({ isDone }) => !isDone)?.id
 
-    const deleteAllTasks = () => {
+    const deleteAllTasks = useCallback(() => {
         const isConfirmed = confirm('Are you sure you want delete all?')
         if (isConfirmed) {
             setTasks([])
         }
-    }
+    }, []) //если бы функция зависила от каких-то данных, то мы бы добавили их сюда
 
-    const deleteTask = (taskId) => {
+    const deleteTask = useCallback((taskId) => {
         setTasks(tasks.filter((task) => task.id != taskId))
-    }
+    }, [tasks])
 
-    const toggleTaskComplete = (taskId, isDone) => {
+    const toggleTaskComplete = useCallback((taskId, isDone) => {
         setTasks(tasks.map((task) => {
             if (task.id === taskId) {
                 return { ...task, isDone }
             }
             return task
         }))
-    }
+    }, [tasks])
 
     // const filterTask = (query) => {
     //     console.log(`Поиск: ${query}`)
     // }
 
-    const addTask = () => {
+    const addTask = useCallback(() => {
+        () => {
+        //const newTaskTitle = newTaskInputRef.current.value // получаем доступ к дом элементу и получаем значение свойства value
+
         if (newTaskTitle.trim().length > 0) {
             const newTask = {
                 id: crypto?.randomUUID() ?? Date.now().toString(),
                 title: newTaskTitle,
                 isDone: false
             }
-
-            setTasks([...tasks, newTask])
+            setTasks((prevTasks) => [...prevTasks, newTask])
             setNewTaskTitle('')
-            setSearchQuery('') //отключит поиск при вводе задачи
+            //newTaskInputRef.current.value = ''
+            setSearchQuery('') //отключит поиск при вводе новой задачи
+            newTaskInputRef.current.focus()
         }
     }
+    },[newTaskTitle])
 
     // useEffect(() => {
     //     console.log(`Компонент смонтирован, загружаем из хранилища`)
@@ -81,10 +90,30 @@ const Todo = () => {
         localStorage.setItem('tasks', JSON.stringify(tasks))
     }, [tasks])
 
-    const clearSearchQuery = searchQuery.trim().toLowerCase()
-    const filteredTasks = clearSearchQuery.length > 0
-    ? tasks.filter(({title}) => title.toLowerCase().includes(clearSearchQuery))
-    : null
+    useEffect(() => {
+        newTaskInputRef.current.focus()
+    }, [])
+
+    // const renderCount = useRef(0)
+
+    // useEffect(()=>{
+    //     renderCount.current++
+    //     console.log(`Компонент todo отрендерился ${renderCount.current} раз(а)`) // без списка зависимости эффект срабатывает после каждого рендера
+    // })
+
+   
+    const filteredTasks = useMemo(() => {
+         const clearSearchQuery = searchQuery.trim().toLowerCase()
+        return clearSearchQuery.length > 0
+        ? tasks.filter(({ title }) => title.toLowerCase().includes(clearSearchQuery))
+        : null}, [searchQuery, tasks])
+
+        const memoizedFn = useCallback(() => {
+        }, [])
+
+        const doneTasks = useMemo(()=> {
+            tasks.filter((task) => task.isDone).length}
+        , [tasks]) 
 
     return (
         <div className="todo">
@@ -93,6 +122,7 @@ const Todo = () => {
                 addTask={addTask}
                 newTaskTitle={newTaskTitle}
                 setNewTaskTitle={setNewTaskTitle}
+                newTaskInputRef={newTaskInputRef}
             />
             <SearchTaskForm
                 // onSearchInput={filterTask}
@@ -101,12 +131,19 @@ const Todo = () => {
             />
             <TodoInfo
                 total={tasks.length}
-                done={tasks.filter((task) => task.isDone).length}
+                done={doneTasks}
                 onDeleteAllButtonClick={deleteAllTasks}
             />
+            <Button
+                onClick={() => firstIncompleteTaskRef.current?.scrollIntoView({ behavior: 'smooth' })}
+            >
+                Show first in complit task
+            </Button>
             <TodoList
                 onTaskCompliteChange={toggleTaskComplete}
                 filteredTasks={filteredTasks}
+                firstIncompleteTaskRef={firstIncompleteTaskRef}
+                firstIncompleteTaskId={firstIncompleteTaskId}
                 tasks={tasks}
                 onDeleteTaskButtonClick={deleteTask} />
         </div>
