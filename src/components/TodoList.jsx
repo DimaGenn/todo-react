@@ -1,58 +1,35 @@
-import TodoItem from "./TodoItem"
+import { memo, useContext } from 'react'
+import TodoItem from './TodoItem'
+import { TasksContext } from '../context/TasksContext'
 
-const TodoList = (props) => {
-    const {
-tasks = [],
-onDeleteTaskButtonClick,
-onTaskCompliteChange, 
-filteredTasks,
-firstIncompleteTaskId,
-firstIncompleteTaskRef,
-    } = props
+const TodoList = () => {
+  const {
+    tasks,
+    filteredTasks,
+  } = useContext(TasksContext)
 
-    const hasTasks = tasks.length > 0
-    const isEmptyFilterredTasks = filteredTasks?.length === 0 //оператор опциональной последовательности
+  const hasTasks = tasks.length > 0
+  const isEmptyFilteredTasks = filteredTasks?.length === 0
 
-    if (!hasTasks) {
-        return <div className="todo__empty-message">Пока что задач нет!</div>
-        
-    }
-    if (hasTasks && isEmptyFilterredTasks) {
-        return <div className="todo__empty-message">Искомые задачи не найдены!</div>
-    }
-    
-        return (
-            <ul className="todo__list">
-                {(filteredTasks ?? tasks ).map(({id, title, isDone}) => ( //деструктурируем из task для быстрой записи, а можно еще в аргументы записать task  и внутри функции {...task}
-                    <TodoItem
-                    className="todo__item"
-                    onDeleteTaskButtonClick={onDeleteTaskButtonClick}
-                    onTaskCompliteChange={onTaskCompliteChange}
-                    ref={id === firstIncompleteTaskId ? firstIncompleteTaskRef : null}
-                    key={id}
-                    id={id}
-                    title={title}
-                    isDone={isDone} 
+  if (!hasTasks) {
+    return <div className="todo__empty-message">There are no tasks yet</div>
+  }
 
-                    />
-                ))}
-                {/* <TodoItem
-                    className="todo__item"
-                    id="task-1"
-                    title="Купить молоко"
-                    isDone={false}
-                />
-                <TodoItem
-                    className="todo__item"
-                    id="task-2"
-                    title="Погладить кота"
-                    isDone
-                /> */}
-            </ul>
-        )
-    
+  if (hasTasks && isEmptyFilteredTasks) {
+    return <div className="todo__empty-message">Tasks not found</div>
+  }
 
-
+  return (
+    <ul className="todo__list">
+      {(filteredTasks ?? tasks).map((task) => (
+        <TodoItem
+          className="todo__item"
+          key={task.id}
+          {...task}
+        />
+      ))}
+    </ul>
+  )
 }
 
-export default TodoList
+export default memo(TodoList)
